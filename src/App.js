@@ -61,6 +61,16 @@ export default function App() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
+  function handleSelectedId(id) {
+    setSelectedId(function (selectedId) {
+      return id === selectedId ? null : id;
+    });
+  }
+
+  function handleCloseMovie() {
+    setSelectedId(null);
+  }
+
   useEffect(
     function () {
       async function fetchMovies() {
@@ -107,12 +117,23 @@ export default function App() {
       <Main>
         <Box>
           {isLoading && <Loader />}
-          {!isLoading && !error && <MovieList movies={movies} />}
+          {!isLoading && !error && (
+            <MovieList movies={movies} handleSelectedId={handleSelectedId} />
+          )}
           {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
-          <WatchedSummary watched={watched} />
-          <WatchedMoviesList watched={watched} />
+          {selectedId ? (
+            <MovieDetails
+              selectedId={selectedId}
+              handleCloseMovie={handleCloseMovie}
+            />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedMoviesList watched={watched} />
+            </>
+          )}
         </Box>
       </Main>
     </>
@@ -208,17 +229,21 @@ function Box({ children }) {
 //   );
 // }
 
-function MovieList({ movies }) {
+function MovieList({ movies, handleSelectedId }) {
   return (
-    <ul className="list">
-      {movies?.map((movie, index) => (
-        <Movie movie={movie} key={movie.imdbID} i={index} />
+    <ul className="list list-movies">
+      {movies?.map((movie) => (
+        <Movie
+          movie={movie}
+          key={movie.imdbID}
+          handleSelectedId={handleSelectedId}
+        />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie }) {
+function Movie({ movie, handleSelectedId }) {
   const [isImage, setIsImage] = useState(true);
   const source1 =
     "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg";
@@ -228,7 +253,11 @@ function Movie({ movie }) {
   }
 
   return (
-    <li>
+    <li
+      onClick={function () {
+        handleSelectedId(movie.imdbID);
+      }}
+    >
       <img src={isImage ? movie.Poster : source1} onError={handleIsImage} />
       <h3>{movie.Title}</h3>
       <div>
@@ -300,5 +329,23 @@ function WatchedMovie({ movie }) {
         </p>
       </div>
     </li>
+  );
+}
+
+function MovieDetails({ selectedId, handleCloseMovie }) {
+ 
+  useEffect(function(){
+   async function fetchMovieDetails(){
+    const res = await fetch(`http://www.omdbapi.com/?apikey=${key}&id=${selectedId}`)
+    const data  = 
+   }
+  },[selectedId])
+  return (
+    <div className="details">
+      <button className="btn-back" onClick={handleCloseMovie}>
+        &larr;
+      </button>
+      {selectedId}
+    </div>
   );
 }
